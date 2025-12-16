@@ -324,10 +324,6 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     }
 
     public void shutdown() {
-        System.out.println("SHUTDOWN CALLED ");
-        //MBeanServerFactory.releaseMBeanServer(MBEAN_SERVER);
-        //MBEAN_SERVER = null;
-        System.out.println("MBEAN SERVER IS NULL ");
         synchronized (this) {
             if (down) return;
             down = true;
