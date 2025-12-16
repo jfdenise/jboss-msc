@@ -78,12 +78,16 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
 
     static {
         MBeanServer mBeanServer = null;
-        try {
-            mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        } catch (final Exception e) {
-            ServiceLogger.ROOT.mbeanServerNotAvailable(e);
-        } finally {
-            MBEAN_SERVER = mBeanServer;
+        if (Boolean.getBoolean("org.wildfly.graal.build.time")) {
+            MBEAN_SERVER = null;
+        } else {
+            try {
+                mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            } catch (final Exception e) {
+                ServiceLogger.ROOT.mbeanServerNotAvailable(e);
+            } finally {
+                MBEAN_SERVER = mBeanServer;
+            }
         }
         ServiceLogger.ROOT.greeting(Version.getVersionString());
     }
@@ -320,6 +324,10 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     }
 
     public void shutdown() {
+        System.out.println("SHUTDOWN CALLED ");
+        //MBeanServerFactory.releaseMBeanServer(MBEAN_SERVER);
+        //MBEAN_SERVER = null;
+        System.out.println("MBEAN SERVER IS NULL ");
         synchronized (this) {
             if (down) return;
             down = true;
