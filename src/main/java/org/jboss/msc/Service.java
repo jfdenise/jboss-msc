@@ -106,4 +106,17 @@ public interface Service {
         return new SimpleService<>(injector, value);
     }
 
+    /**
+     * Passivate the service at the end of the Graal VM build time phase.
+     */
+    default void passivate() {
+
+    }
+
+    /**
+     * Activate the service at the beginning of the Graal VM runtime phase.
+     */
+    default void activate()throws StartException {
+        
+    }
 }

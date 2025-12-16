@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.jboss.msc.service.management.ServiceStatus;
+import org.wildfly.graal.runtime.WildFlyGraalSetup;
 
 /**
  * The service controller implementation.
@@ -1788,7 +1789,9 @@ final class ServiceControllerImpl<S> implements ServiceController<S>, Dependent 
         public ServiceTarget getChildTarget() {
             synchronized (lock) {
                 if ((state & (COMPLETED | FAILED)) != 0) {
-                    throw new IllegalStateException("Lifecycle context is no longer valid");
+                    if(!WildFlyGraalSetup.isRuntime()) {
+                        throw new IllegalStateException("Lifecycle context is no longer valid");
+                    }
                 }
                 synchronized (ServiceControllerImpl.this) {
                     if (childTarget == null) {

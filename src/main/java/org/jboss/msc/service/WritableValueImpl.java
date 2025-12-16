@@ -25,6 +25,7 @@ package org.jboss.msc.service;
 import org.jboss.msc.service.ServiceController.State;
 
 import java.util.function.Consumer;
+import org.wildfly.graal.runtime.WildFlyGraalSetup;
 
 /**
  * @author <a href="mailto:ropalka@redhat.com">Richard Opalka</a>
@@ -46,6 +47,14 @@ final class WritableValueImpl implements Consumer<Object> {
         final ServiceController controller = this.controller;
         if (controller != null) synchronized (controller) {
             final State state = controller.getState();
+            if(WildFlyGraalSetup.isRuntime()) {
+                if(newValue == null) {
+                     value = UNDEFINED;
+                } else {
+                    value = newValue;
+                }
+                return;
+            }
             if (state == State.STARTING) {
                 value = newValue;
                 return;
@@ -55,6 +64,12 @@ final class WritableValueImpl implements Consumer<Object> {
                 }
                 value = UNDEFINED;
                 return;
+            }
+            if(WildFlyGraalSetup.isBuildTime()) {
+                if(newValue == null) {
+                     value = UNDEFINED;
+                     return;
+                }
             }
         }
         throw new IllegalStateException("Outside of Service lifecycle method");

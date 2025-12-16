@@ -56,6 +56,7 @@
         <version.jboss-logging-processor>3.0.3.Final</version.jboss-logging-processor>
         <version.jboss-logmanager>3.1.0.Final</version.jboss-logmanager>
         <version.jboss-threads>3.6.1.Final</version.jboss-threads>
+        <version.org.wildfly.graal>1.0-SNAPSHOT</version.org.wildfly.graal>
         <version.junit>4.13.2</version.junit>
     </properties>
 
@@ -78,6 +79,12 @@
             <artifactId>jboss-threads</artifactId>
             <version>${version.jboss-threads}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.wildfly.graal</groupId>
+          <artifactId>wildfly-graal-runtime</artifactId>
+          <version>${version.org.wildfly.graal}</version>
+          <scope>provided</scope>
         </dependency>
         <!-- Test Dependencies -->
         <dependency>

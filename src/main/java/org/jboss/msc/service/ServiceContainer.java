@@ -132,6 +132,17 @@ public interface ServiceContainer extends ServiceTarget, ServiceRegistry {
     void dumpServices();
 
     /**
+     * To allow for services and container to be kept in the Graal VM heap.
+     */
+    default void passivateServices() {}
+
+    /**
+     * To activate the services and container when the Graal VM starts at runtime.
+     * @throws StartException 
+     */
+    default void activateServices() throws StartException {}
+
+    /**
      * Dump a complete list of services to the given stream.
      *
      * @param stream the stream to which the service list should be written

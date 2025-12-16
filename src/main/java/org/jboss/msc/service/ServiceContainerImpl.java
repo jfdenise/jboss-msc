@@ -33,11 +33,14 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Hashtable;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -65,6 +68,7 @@ import org.jboss.msc.Version;
 import org.jboss.msc.inject.Injector;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.threads.EnhancedQueueExecutor;
+import org.wildfly.graal.runtime.WildFlyGraalSetup;
 
 /**
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
@@ -78,12 +82,16 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
 
     static {
         MBeanServer mBeanServer = null;
-        try {
-            mBeanServer = ManagementFactory.getPlatformMBeanServer();
-        } catch (final Exception e) {
-            ServiceLogger.ROOT.mbeanServerNotAvailable(e);
-        } finally {
-            MBEAN_SERVER = mBeanServer;
+        if (WildFlyGraalSetup.isBuildTime()) {
+            MBEAN_SERVER = null;
+        } else {
+            try {
+                mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            } catch (final Exception e) {
+                ServiceLogger.ROOT.mbeanServerNotAvailable(e);
+            } finally {
+                MBEAN_SERVER = mBeanServer;
+            }
         }
         ServiceLogger.ROOT.greeting(Version.getVersionString());
     }
@@ -99,6 +107,10 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     private long shutdownInitiated;
 
     private final List<TerminateListener> terminateListeners = new ArrayList<>(1);
+
+    // Required to record services to passivate and activate in a Graal VM context.
+    private final Set<ServiceName> serviceNames = new LinkedHashSet<>();
+    private final List<org.jboss.msc.Service> servicesToActivate = new ArrayList<>();
 
     private static final class ShutdownHookThread extends Thread {
         final Reference<ServiceContainer> containerRef;
@@ -126,20 +138,25 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
 
     private volatile boolean down;
 
-    private final ContainerExecutor executor;
+    private ContainerExecutor executor;
 
     private final String name;
     private final ObjectName objectName;
     private final Thread shutdownThread;
 
     private final ServiceContainerMXBeanImpl containerMXBean;
-
+    private final int coreSize;
+    private final long timeOut;
+    private final TimeUnit timeOutUnit;
     ServiceContainerImpl(String name, int coreSize, long timeOut, TimeUnit timeOutUnit, final boolean autoShutdown) {
         final int serialNo = SERIAL.getAndIncrement();
         if (name == null) {
             name = String.format("anonymous-%d", Integer.valueOf(serialNo));
         }
         this.name = name;
+        this.coreSize = coreSize;
+        this.timeOut = timeOut;
+        this.timeOutUnit = timeOutUnit;
         executor = new ContainerExecutor(coreSize, coreSize, timeOut, timeOutUnit);
         ObjectName objectName = null;
         containerMXBean = new ServiceContainerMXBeanImpl(name, registry);
@@ -369,6 +386,44 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
         dumpServices(System.out);
     }
 
+    /**
+     * Passivate all running services then shutdown the executor.
+     * Called in a Graal VM context.
+     */
+    @Override
+    public void passivateServices() {
+        Set<org.jboss.msc.Service> seenServices = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (ServiceName serviceName : serviceNames) {
+            ServiceRegistrationImpl reg = registry.get(serviceName);
+            org.jboss.msc.Service s = reg.getDependencyController().service;
+            if (!seenServices.contains(s)) {
+                seenServices.add(s);
+                s.passivate();
+                servicesToActivate.add(s);
+            }
+        }
+        executor.shutdownNow();
+    }
+
+    /**
+     * Start the container executor and activate services that have been previously passivated.
+     * Called in a Graal VM context.
+     * @throws StartException 
+     */
+    @Override
+    public void activateServices() throws StartException {
+        executor = new ContainerExecutor(coreSize, coreSize, timeOut, timeOutUnit);
+        for(org.jboss.msc.Service s : servicesToActivate) {
+            ClassLoader current = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(s.getClass().getClassLoader());
+                s.activate();
+            } finally {
+                Thread.currentThread().setContextClassLoader(current);
+            }
+        }
+    }
+
     public void dumpServices(final PrintStream out) {
         containerMXBean.dumpServices(null, Functions.ServiceIdentityFunction.INSTANCE, null, out);
     }
@@ -423,6 +478,9 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
             }
             synchronized (registration) {
                 registration.acquireWrite();
+                if (WildFlyGraalSetup.isBuildTime()) {
+                    serviceNames.add(name);
+                }
                 try {
                     success = registration.addPendingInstallation();
                 } finally {
@@ -661,7 +719,11 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
                     .setKeepAliveTime(keepAliveTime, unit)
                     .setTerminationTask(new Runnable() {
                         public void run() {
-                            shutdownComplete(shutdownInitiated);
+                            if (WildFlyGraalSetup.isBuildTime()) {
+                                System.out.println("Disabling shutdown of JBoss MSC container at build time");
+                            } else {
+                                shutdownComplete(shutdownInitiated);
+                            }
                         }
                     })
                     .setThreadFactory(threadFactory)

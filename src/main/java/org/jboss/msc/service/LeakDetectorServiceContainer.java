@@ -43,6 +43,15 @@ final class LeakDetectorServiceContainer implements ServiceContainer {
     }
 
     @Override
+    public void passivateServices() {
+        delegate.passivateServices();
+    }
+
+    @Override
+    public void activateServices() throws StartException {
+        delegate.activateServices();
+    }
+    @Override
     public void shutdown() {
         getDelegate().shutdown();
     }
