@@ -238,6 +238,8 @@ public interface ServiceController<S> extends Value<S> {
          * Service was removed from the container.
          */
         REMOVED,
+        PASSIVATE,
+        RESUME
         ;
 
         /**
@@ -286,6 +288,8 @@ public interface ServiceController<S> extends Value<S> {
          * Demand to start, recursively demanding dependencies.  This is the default mode.
          */
         ACTIVE,
+        PASSIVATE,
+        RESUME
         ;
 
         /**

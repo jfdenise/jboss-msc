@@ -46,10 +46,14 @@ final class WritableValueImpl implements Consumer<Object> {
         final ServiceController controller = this.controller;
         if (controller != null) synchronized (controller) {
             final State state = controller.getState();
-            if (state == State.STARTING) {
+            if (state == State.STARTING || state == State.RESUME) {
                 value = newValue;
+                if(value.getClass().getName().contains("org.jboss.as.network.SocketBinding")) {
+                    System.out.println("SET A SOCKET BINDING");
+                    new Exception().printStackTrace();
+                }
                 return;
-            } else if (state == State.STOPPING) {
+            } else if (state == State.STOPPING || state == State.PASSIVATE) {
                 if (newValue != null) {
                     throw new IllegalArgumentException("Null parameter expected");
                 }
@@ -57,7 +61,12 @@ final class WritableValueImpl implements Consumer<Object> {
                 return;
             }
         }
-        throw new IllegalStateException("Outside of Service lifecycle method");
+        if(newValue == null) {
+            value = UNDEFINED;
+        }
+        if(!Boolean.getBoolean("org.wildfly.graal.build.time") && !Boolean.getBoolean("org.wildfly.graal")) {
+            throw new IllegalStateException("Outside of Service lifecycle method");
+        }
     }
 
     void uninject() {

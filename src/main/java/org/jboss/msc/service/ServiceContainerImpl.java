@@ -104,6 +104,35 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
 
     private final List<TerminateListener> terminateListeners = new ArrayList<>(1);
 
+    @Override
+    public void passivate() {
+        ServiceControllerImpl<?> controller;
+        executor = null;
+        for (ServiceRegistrationImpl registration : registry.values()) {
+            //System.out.println("REGISTRATION " + registration.getName());
+            controller = registration.getDependencyController();
+            System.out.println(controller.getName() + " " + controller.service);
+            controller.service.passivate();
+        }
+    }
+
+    @Override
+    public void resume() {
+        ServiceControllerImpl<?> controller;
+        executor = new ContainerExecutor(coreSize, coreSize, timeOut, timeOutUnit);
+        System.out.println("SERVICE ORDER");
+        for (ServiceRegistrationImpl registration : registry.values()) {
+            //System.out.println("IN REGISTRATION " + registration.getName());
+            controller = registration.getDependencyController();
+            System.out.println(controller.getName() + " " + controller.service);
+        }
+        for (ServiceRegistrationImpl registration : registry.values()) {
+            //System.out.println("IN REGISTRATION " + registration.getName());
+            controller = registration.getDependencyController();
+            controller.service.resume();
+        }
+    }
+
     private static final class ShutdownHookThread extends Thread {
         final Reference<ServiceContainer> containerRef;
 
@@ -130,15 +159,20 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
 
     private volatile boolean down;
 
-    private final ContainerExecutor executor;
+    private ContainerExecutor executor;
 
     private final String name;
     private final ObjectName objectName;
     private final Thread shutdownThread;
 
     private final ServiceContainerMXBeanImpl containerMXBean;
-
+    private final int coreSize;
+    private final long timeOut;
+    private final TimeUnit timeOutUnit;
     ServiceContainerImpl(String name, int coreSize, long timeOut, TimeUnit timeOutUnit, final boolean autoShutdown) {
+        this.coreSize = coreSize;
+        this.timeOut = timeOut;
+        this.timeOutUnit = timeOutUnit;
         final int serialNo = SERIAL.getAndIncrement();
         if (name == null) {
             name = String.format("anonymous-%d", Integer.valueOf(serialNo));

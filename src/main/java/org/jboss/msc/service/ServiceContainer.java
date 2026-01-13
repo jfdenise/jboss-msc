@@ -144,6 +144,9 @@ public interface ServiceContainer extends ServiceTarget, ServiceRegistry {
      * @return the container name
      */
     String getName();
+    
+    void passivate();
+    void resume();
 
     /**
      * The factory class for service containers.

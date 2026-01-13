@@ -105,5 +105,7 @@ public interface Service {
     static <V> Service newInstance(final Consumer<V> injector, final V value) {
         return new SimpleService<>(injector, value);
     }
-
+    
+    void passivate();
+    void resume();
 }

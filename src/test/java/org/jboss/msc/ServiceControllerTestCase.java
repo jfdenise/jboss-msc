@@ -229,6 +229,16 @@ public class ServiceControllerTestCase extends AbstractServiceTest {
             public void stop(StopContext context) {
             }
 
+            @Override
+            public void passivate() {
+                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+            }
+
+            @Override
+            public void resume() {
+                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+            }
+
         }).install();
         serviceContainer.awaitStability();
         assertState(serviceContainer, ServiceName.of("serviceOne"), ServiceController.State.START_FAILED);

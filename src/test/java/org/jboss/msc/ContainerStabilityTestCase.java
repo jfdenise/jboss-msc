@@ -92,6 +92,16 @@ public final class ContainerStabilityTestCase extends AbstractServiceTest {
             public void stop(StopContext context) {
                 parentProvidedValue.accept(null);
             }
+
+            @Override
+            public void passivate() {
+                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+            }
+
+            @Override
+            public void resume() {
+                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+            }
         });
         ServiceName sn2 = ServiceName.of("Test2");
         sb1.requires(sn2);
@@ -135,6 +145,16 @@ public final class ContainerStabilityTestCase extends AbstractServiceTest {
                     public void stop(StopContext context) {
                         // blah
                     }
+
+                    @Override
+                    public void passivate() {
+                        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                    }
+
+                    @Override
+                    public void resume() {
+                        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+                    }
                 });
                 childSB.addListener(new LifecycleListener() {
                     @Override
@@ -148,6 +168,16 @@ public final class ContainerStabilityTestCase extends AbstractServiceTest {
             @Override
             public void stop(StopContext context) {
                 providedValue.accept(null);
+            }
+
+            @Override
+            public void passivate() {
+                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+            }
+
+            @Override
+            public void resume() {
+                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
             }
         });
         ServiceName sn2 = ServiceName.of("Test2");

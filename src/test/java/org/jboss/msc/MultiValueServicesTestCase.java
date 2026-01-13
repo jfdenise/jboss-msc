@@ -255,6 +255,16 @@ public class MultiValueServicesTestCase extends AbstractServiceTest {
             stopMsg = "stop(httpHost == " + httpHost.get() + ", httpPort == " + httpPort.get();
         }
 
+        @Override
+        public void passivate() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public void resume() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
     }
 
     private static final class HttpConfigService implements org.jboss.msc.Service {
@@ -274,6 +284,16 @@ public class MultiValueServicesTestCase extends AbstractServiceTest {
 
         @Override
         public void stop(StopContext context) {}
+
+        @Override
+        public void passivate() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public void resume() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
     }
 
     private static final class LegacyHttpServer implements Service<HttpServer> {
@@ -304,6 +324,16 @@ public class MultiValueServicesTestCase extends AbstractServiceTest {
         public HttpServer getValue() {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public void passivate() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public void resume() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
     }
 
     private static final class LegacyHttpHostService implements Service<String> {
@@ -323,6 +353,16 @@ public class MultiValueServicesTestCase extends AbstractServiceTest {
         public String getValue() {
             return httpHost;
         }
+
+        @Override
+        public void passivate() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public void resume() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
     }
 
     private static final class LegacyHttpPortService implements Service<Integer> {
@@ -341,6 +381,16 @@ public class MultiValueServicesTestCase extends AbstractServiceTest {
         @Override
         public Integer getValue() {
             return httpPort;
+        }
+
+        @Override
+        public void passivate() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public void resume() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
         }
     }
 

@@ -87,6 +87,16 @@ public class MSC160TestCase extends AbstractServiceTest {
         @Override
         public void stop(final StopContext context) {}
 
+        @Override
+        public void passivate() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public void resume() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
     }
 
     private static final class CompleteAfterFailedService implements Service {
@@ -116,6 +126,16 @@ public class MSC160TestCase extends AbstractServiceTest {
 
         @Override
         public void stop(final StopContext context) {}
+
+        @Override
+        public void passivate() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
+
+        @Override
+        public void resume() {
+            throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        }
 
     }
 }

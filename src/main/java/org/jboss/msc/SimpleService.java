@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 /**
  * @author <a href="mailto:ropalka@redhat.com">Richard Opalka</a>
  */
-final class SimpleService<V> implements Service {
+public final class SimpleService<V> implements Service {
 
     private final Consumer<V> injector;
     private final V value;
@@ -50,5 +50,14 @@ final class SimpleService<V> implements Service {
 
     @Override
     public void stop(final StopContext context) {}
+
+    @Override
+    public void passivate() {
+        System.out.println("PASSIVATE SIMPLE SERVICE");
+    }
+
+    @Override
+    public void resume() {
+    }
 
 }

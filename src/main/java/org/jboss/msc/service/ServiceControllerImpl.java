@@ -709,6 +709,7 @@ final class ServiceControllerImpl<S> implements ServiceController<S>, Dependent 
     }
 
     public void setMode(final ServiceController.Mode newMode) {
+        
         internalSetMode(null, newMode);
     }
 

@@ -167,4 +167,14 @@ final class LeakDetectorServiceContainer implements ServiceContainer {
         return getDelegate().addDependency(dependency);
     }
 
+    @Override
+    public void passivate() {
+        getDelegate().passivate();
+    }
+
+    @Override
+    public void resume() {
+        getDelegate().resume();
+    }
+
 }
