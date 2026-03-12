@@ -105,5 +105,10 @@ public interface Service {
     static <V> Service newInstance(final Consumer<V> injector, final V value) {
         return new SimpleService<>(injector, value);
     }
-
+    default void passivate() {
+        
+    }
+    default void runtime()throws StartException {
+        
+    }
 }

@@ -1788,7 +1788,9 @@ final class ServiceControllerImpl<S> implements ServiceController<S>, Dependent 
         public ServiceTarget getChildTarget() {
             synchronized (lock) {
                 if ((state & (COMPLETED | FAILED)) != 0) {
-                    throw new IllegalStateException("Lifecycle context is no longer valid");
+                    if(!Boolean.getBoolean("org.wildfly.graal")) {
+                        throw new IllegalStateException("Lifecycle context is no longer valid");
+                    }
                 }
                 synchronized (ServiceControllerImpl.this) {
                     if (childTarget == null) {

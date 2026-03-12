@@ -33,11 +33,14 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Hashtable;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -115,6 +118,7 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
 
         @Override
         public void run() {
+            System.out.println("SHUTDOWN CONTAINER !!!!!!!!!!");
             final ServiceContainer container = containerRef.get();
             if (container == null) return;
             container.shutdown();
@@ -130,20 +134,25 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
 
     private volatile boolean down;
 
-    private final ContainerExecutor executor;
+    private ContainerExecutor executor;
 
     private final String name;
     private final ObjectName objectName;
     private final Thread shutdownThread;
 
     private final ServiceContainerMXBeanImpl containerMXBean;
-
+    private final int coreSize;
+    private final long timeOut;
+    private final TimeUnit timeOutUnit;
     ServiceContainerImpl(String name, int coreSize, long timeOut, TimeUnit timeOutUnit, final boolean autoShutdown) {
         final int serialNo = SERIAL.getAndIncrement();
         if (name == null) {
             name = String.format("anonymous-%d", Integer.valueOf(serialNo));
         }
         this.name = name;
+        this.coreSize = coreSize;
+        this.timeOut = timeOut;
+        this.timeOutUnit = timeOutUnit;
         executor = new ContainerExecutor(coreSize, coreSize, timeOut, timeOutUnit);
         ObjectName objectName = null;
         containerMXBean = new ServiceContainerMXBeanImpl(name, registry);
@@ -324,6 +333,7 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     }
 
     public void shutdown() {
+        System.out.println("CONTAINER SHUTDOWN CALLED");
         synchronized (this) {
             if (down) return;
             down = true;
@@ -366,18 +376,52 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     }
 
     public boolean isShutdownComplete() {
+        System.out.println("IS SHUTDIOWN COMPLETE " + terminateInfo);
         return terminateInfo != null;
     }
 
     public void dumpServices() {
-        dumpServices(System.out);
+        for(ServiceName name : serviceNames) {
+            ServiceRegistrationImpl reg = registry.get(name);
+            org.jboss.msc.Service s = reg.getDependencyController().service;
+                        System.out.println(name + ": " + s);
+        }
+        //dumpServices(System.out);
     }
-
+    public void passivateServices() {
+        System.out.println("WILL PASSIVATE ALL SERVICES");
+        Set set = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (ServiceName name : serviceNames) {
+            ServiceRegistrationImpl reg = registry.get(name);
+            org.jboss.msc.Service s = reg.getDependencyController().service;
+            if (!set.contains(s)) {
+                set.add(s);
+                System.out.println("PASSIVATE " + name);
+                s.passivate();
+                servicesToEnable.add(s);
+            }
+        }
+        executor.shutdownNow();
+    }
+    public void runtimeServices() throws StartException {
+        executor = new ContainerExecutor(coreSize, coreSize, timeOut, timeOutUnit);
+        for(org.jboss.msc.Service s : servicesToEnable) {
+            System.out.println("RUNTIME FOR " + s);
+            ClassLoader current = Thread.currentThread().getContextClassLoader();
+            try {
+                Thread.currentThread().setContextClassLoader(s.getClass().getClassLoader());
+                s.runtime();
+            } finally {
+                Thread.currentThread().setContextClassLoader(current);
+            }
+        }
+    }
     public void dumpServices(final PrintStream out) {
         containerMXBean.dumpServices(null, Functions.ServiceIdentityFunction.INSTANCE, null, out);
     }
 
     private void shutdownComplete(final long started) {
+        //System.out.println("SHUTDOWN IS COMPLETE! ");
         synchronized (this) {
             terminateInfo = new TerminateListener.Info(started, System.nanoTime());
         }
@@ -405,7 +449,8 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     Executor getExecutor() {
         return executor;
     }
-
+    private final Set<ServiceName> serviceNames = new LinkedHashSet<>();
+    private final List<org.jboss.msc.Service> servicesToEnable = new ArrayList<>();
     /**
      * Atomically get or create a registration.
      *
@@ -427,6 +472,7 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
             }
             synchronized (registration) {
                 registration.acquireWrite();
+                serviceNames.add(name);
                 try {
                     success = registration.addPendingInstallation();
                 } finally {
@@ -665,7 +711,11 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
                     .setKeepAliveTime(keepAliveTime, unit)
                     .setTerminationTask(new Runnable() {
                         public void run() {
-                            shutdownComplete(shutdownInitiated);
+                            if (Boolean.getBoolean("org.wildfly.graal.build.time")) {
+                                System.out.println("DO NOT SHUTDOWN THE CONTAINER AT BUILD TIME");
+                            } else {
+                                shutdownComplete(shutdownInitiated);
+                            }
                         }
                     })
                     .setThreadFactory(threadFactory)

@@ -38,7 +38,7 @@ final class WritableValueImpl implements Consumer<Object> {
     Object getValue() {
         final Object value = this.value;
         if (UNDEFINED != value) return value;
-        throw new IllegalStateException("Service unavailable");
+        throw new IllegalStateException("Service unavailable for " + controller.provides());
     }
 
     @Override
@@ -46,6 +46,14 @@ final class WritableValueImpl implements Consumer<Object> {
         final ServiceController controller = this.controller;
         if (controller != null) synchronized (controller) {
             final State state = controller.getState();
+            if(Boolean.getBoolean("org.wildfly.graal")) {
+                if(newValue == null) {
+                     value = UNDEFINED;
+                } else {
+                    value = newValue;
+                }
+                return;
+            }
             if (state == State.STARTING) {
                 value = newValue;
                 return;
@@ -55,6 +63,12 @@ final class WritableValueImpl implements Consumer<Object> {
                 }
                 value = UNDEFINED;
                 return;
+            }
+            if(Boolean.getBoolean("org.wildfly.graal.build.time")) {
+                if(newValue == null) {
+                     value = UNDEFINED;
+                     return;
+                }
             }
         }
         throw new IllegalStateException("Outside of Service lifecycle method");

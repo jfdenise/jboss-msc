@@ -130,6 +130,9 @@ public interface ServiceContainer extends ServiceTarget, ServiceRegistry {
      * Dump a complete list of services to {@code System.out}.
      */
     void dumpServices();
+    
+    default void passivateServices() {}
+    default void runtimeServices() throws StartException {}
 
     /**
      * Dump a complete list of services to the given stream.
