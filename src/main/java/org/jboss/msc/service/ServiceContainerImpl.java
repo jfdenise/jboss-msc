@@ -376,7 +376,6 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     }
 
     public boolean isShutdownComplete() {
-        System.out.println("IS SHUTDIOWN COMPLETE " + terminateInfo);
         return terminateInfo != null;
     }
 
@@ -389,7 +388,6 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
         //dumpServices(System.out);
     }
     public void passivateServices() {
-        System.out.println("WILL PASSIVATE ALL SERVICES");
         Set set = Collections.newSetFromMap(new IdentityHashMap<>());
         for (ServiceName name : serviceNames) {
             ServiceRegistrationImpl reg = registry.get(name);
@@ -406,7 +404,7 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     public void runtimeServices() throws StartException {
         executor = new ContainerExecutor(coreSize, coreSize, timeOut, timeOutUnit);
         for(org.jboss.msc.Service s : servicesToEnable) {
-            System.out.println("RUNTIME FOR " + s);
+            //System.out.println("RUNTIME FOR " + s);
             ClassLoader current = Thread.currentThread().getContextClassLoader();
             try {
                 Thread.currentThread().setContextClassLoader(s.getClass().getClassLoader());
@@ -421,7 +419,6 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     }
 
     private void shutdownComplete(final long started) {
-        //System.out.println("SHUTDOWN IS COMPLETE! ");
         synchronized (this) {
             terminateInfo = new TerminateListener.Info(started, System.nanoTime());
         }
