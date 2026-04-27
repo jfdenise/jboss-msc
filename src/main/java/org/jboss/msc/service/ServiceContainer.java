@@ -138,9 +138,10 @@ public interface ServiceContainer extends ServiceTarget, ServiceRegistry {
 
     /**
      * To activate the services and container when the Graal VM starts at runtime.
+     * The delayPrefix is a way to delay some services at the end of the activation based on their name.
      * @throws StartException 
      */
-    default void activateServices() throws StartException {}
+    default void activateServices(String delayPrefix) throws StartException {}
 
     /**
      * Dump a complete list of services to the given stream.

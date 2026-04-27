@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -111,7 +112,7 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
     // Required to record services to passivate and activate in a Graal VM context.
     private final Set<ServiceName> serviceNames = new LinkedHashSet<>();
     private final List<org.jboss.msc.Service> servicesToActivate = new ArrayList<>();
-
+    private final Map<org.jboss.msc.Service, ServiceName> serviceToName = new HashMap<>();
     private static final class ShutdownHookThread extends Thread {
         final Reference<ServiceContainer> containerRef;
 
@@ -398,6 +399,8 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
             org.jboss.msc.Service s = reg.getDependencyController().service;
             if (!seenServices.contains(s)) {
                 seenServices.add(s);
+                serviceToName.put(s, serviceName);
+                //System.out.println("PASSIVATE " + serviceName);
                 s.passivate();
                 servicesToActivate.add(s);
             }
@@ -411,16 +414,27 @@ final class ServiceContainerImpl extends ServiceTargetImpl implements ServiceCon
      * @throws StartException 
      */
     @Override
-    public void activateServices() throws StartException {
+    public void activateServices(String delayPrefix) throws StartException {
         executor = new ContainerExecutor(coreSize, coreSize, timeOut, timeOutUnit);
+        List<org.jboss.msc.Service> delayed = new ArrayList<>();
         for(org.jboss.msc.Service s : servicesToActivate) {
             ClassLoader current = Thread.currentThread().getContextClassLoader();
             try {
                 Thread.currentThread().setContextClassLoader(s.getClass().getClassLoader());
-                s.activate();
+                ServiceName name = serviceToName.get(s);
+                if (name.getCanonicalName().startsWith(delayPrefix)) {
+                    delayed.add(s);
+                } else {
+                    //System.out.println("ACTIVATE " + serviceToName.get(s));
+                    s.activate();
+                }
             } finally {
                 Thread.currentThread().setContextClassLoader(current);
             }
+        }
+        for(org.jboss.msc.Service s : delayed) {
+            //System.out.println("ACTIVATE " + serviceToName.get(s));
+            s.activate();
         }
     }
 

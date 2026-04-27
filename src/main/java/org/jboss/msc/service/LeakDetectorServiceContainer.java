@@ -48,8 +48,8 @@ final class LeakDetectorServiceContainer implements ServiceContainer {
     }
 
     @Override
-    public void activateServices() throws StartException {
-        delegate.activateServices();
+    public void activateServices(String delayPrefix) throws StartException {
+        delegate.activateServices(delayPrefix);
     }
     @Override
     public void shutdown() {
